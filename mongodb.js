@@ -1,8 +1,18 @@
 
 //Importing the installed mongodb driver and storing the module's client inside a constant
 //This two lines could be rewritten as "const MongoClient = require('mongodb').MongoClient"
-const mongodb = require('mongodb')
-const MongoClient = mongodb.MongoClient
+
+/* -- CODE -- const mongodb = require('mongodb')
+const MongoClient = mongodb.MongoClient */
+
+//Get the ObjectID object from de mongodb module to performs operations 
+//with ObjectID (collection's documents IDs) objects
+
+/* -- CODE -- const ObjectID = mongodb.ObjectID */
+
+//We change the previous module importing syntax, we deconstruct the object we get from
+//"require('mongodb')"
+const {MongoClient, ObjectID} = require('mongodb')
 
 //Importing assert from Mocha to stop the script when an assertion fails
 const assert = require('assert')
@@ -50,7 +60,8 @@ MongoClient.connect(connectionURL, {useUnifiedTopology : true}, (error, client) 
         console.log(result.ops)
         console.log(result.insertedIds)
     })
-
+    //Create another collection (equivalent to a table) called tasks with some
+    //documents (equivalent to rows or registries)
     db.collection('tasks').insertMany([
         {
             description : 'Finish node course unit',
@@ -67,5 +78,24 @@ MongoClient.connect(connectionURL, {useUnifiedTopology : true}, (error, client) 
     ], (error, result) => {
         assert.strictEqual(null, error)
         console.log(result.ops)
+        
+        //Drop (delete) users collection to not accumulate test data
+        db.collection('users').drop((error, result) => {
+            assert.strictEqual(null, error)
+            console.log('users collection dropped from the database')
+        })
+        //Drop (delete) tasks collection to not accumulate test data
+        db.collection('tasks').drop((error, result) => {
+            assert.strictEqual(null, error)
+            console.log('tasks collection dropped from the database')
+            client.close()
+        })
+
     })
+
+
+
+
+   
+
 })
