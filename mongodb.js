@@ -19,6 +19,23 @@ MongoClient.connect(connectionURL, {useUnifiedTopology : true}, (error, client) 
     //invoked with an error, meaning the connection is successful, otherwise the 
     //script stops at this line
     assert.strictEqual(null, error)
-    //If the prior assertion is successful, it means the connection to the database came along nicely
+    //If the prior assertion is successful, it means the connection to the mongoDB instance came along nicely
     console.log('Successful connection to the database!')
+    //Get the reference for the database in the mongoDB instance to which we have just stablished 
+    //connection, if the database doesn't exist, it gets created automatically
+    const db = client.db(databaseName)
+    //Get the collection (equivalent to a table for regular SQL) inside de database
+    //if it doesn't exist already, it's automatically created, and we insert a new document (object)
+    //in this collection. insertOne is asynchronous, so we can optionally provide a callback
+    //function for when the operation is finished or failed.
+    db.collection('users').insertOne({
+        name : 'Aldo',
+        age : 24
+    }, (error, result) => {
+        assert.strictEqual(error, null)
+        console.log(result)
+
+    })
+
+    
 })
