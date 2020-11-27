@@ -33,9 +33,39 @@ MongoClient.connect(connectionURL, {useUnifiedTopology : true}, (error, client) 
         age : 24
     }, (error, result) => {
         assert.strictEqual(error, null)
-        console.log(result)
-
+        console.log(result.ops)
+    })
+    //Insert multiple documents into the collection at the same time
+    db.collection('users').insertMany([
+        {
+            name : 'Jen',
+            age : 22
+        },
+        {   
+            name : 'Ghunter',
+            age : 19
+        }
+    ], (error, result) => {
+        assert.strictEqual(error, null)
+        console.log(result.ops)
+        console.log(result.insertedIds)
     })
 
-    
+    db.collection('tasks').insertMany([
+        {
+            description : 'Finish node course unit',
+            completed : false
+        },
+        {
+            description : 'Update GitHub repo',
+            completed : true
+        },
+        {
+            description : 'Create new project',
+            completed : true
+        }
+    ], (error, result) => {
+        assert.strictEqual(null, error)
+        console.log(result.ops)
+    })
 })
