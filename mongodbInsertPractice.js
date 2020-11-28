@@ -24,6 +24,11 @@ const connectionURL = 'mongodb://127.0.0.1:27017'
 //Name of the database we want to access in our MongoDB instance
 const databaseName = 'task-app' 
 
+//Create a new instance of the ObjectID class
+const id = new ObjectID()
+
+const dropTables = false
+
 MongoClient.connect(connectionURL, {useUnifiedTopology : true}, (error, client) => {
     //Mocha assertoon to make sure the connect callback function is not being 
     //invoked with an error, meaning the connection is successful, otherwise the 
@@ -39,6 +44,7 @@ MongoClient.connect(connectionURL, {useUnifiedTopology : true}, (error, client) 
     //in this collection. insertOne is asynchronous, so we can optionally provide a callback
     //function for when the operation is finished or failed.
     db.collection('users').insertOne({
+        _id : id,
         name : 'Aldo',
         age : 24
     }, (error, result) => {
@@ -79,23 +85,26 @@ MongoClient.connect(connectionURL, {useUnifiedTopology : true}, (error, client) 
         assert.strictEqual(null, error)
         console.log(result.ops)
         
-        //Drop (delete) users collection to not accumulate test data
-        db.collection('users').drop((error, result) => {
-            assert.strictEqual(null, error)
-            console.log('users collection dropped from the database')
-        })
-        //Drop (delete) tasks collection to not accumulate test data
-        db.collection('tasks').drop((error, result) => {
-            assert.strictEqual(null, error)
-            console.log('tasks collection dropped from the database')
+        if(dropTables){
+            //Drop (delete) users collection to not accumulate test data
+            db.collection('users').drop((error, result) => {
+                assert.strictEqual(null, error)
+                console.log('users collection dropped from the database')
+            })
+            //Drop (delete) tasks collection to not accumulate test data
+            db.collection('tasks').drop((error, result) => {
+                assert.strictEqual(null, error)
+                console.log('tasks collection dropped from the database')
+                client.close()
+            })
+        }
+        if(!dropTables)
             client.close()
-        })
 
     })
 
 
-
-
-   
-
 })
+
+console.log(id.toString().length)
+console.log(id.getTimestamp())
