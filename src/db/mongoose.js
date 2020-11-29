@@ -38,3 +38,23 @@ me.save().then((modelInstance) => {
 }).catch((error) => {
     console.log('Error!', error)
 })
+//Create a model for the tasks documents
+const Task = mongoose.model('Task', {
+    description : {
+        type : String
+    },
+    completed : {
+        type : Boolean
+    }
+})
+//Create a new instance of the task model (document)
+const learnTask = new Task({
+    description : 'Learn mongoose integration with Node.js',
+    completed : false
+})
+//Save the instance of the model (document)
+learnTask.save().then((modelInstance) => {
+    console.log('Saved!', modelInstance)
+}).catch((error) => {
+    console.log('Error!', error)
+})
