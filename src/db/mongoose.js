@@ -21,16 +21,21 @@ mongoose.connect(connectionURL,
 //we specify the data type we require when creating a new instance (document) of this model.
 const User = mongoose.model('User', {
     name : {
-        type : String
+        type : String,
+        required : true
     },
     age : {
-        type : Number
+        type : Number,
+        required : true,
+        validate(value){
+            if(value < 0) throw new Error('The age must be a positive number')
+        }
     }
 })
 //Instantiate the model with specific values
 const me = new User({
     name : 'AldoDev',
-    age : 24
+    age : 0
 })
 //Save the instnace of the model (document) to the database in the MongoDB instance
 me.save().then((modelInstance) => {
@@ -41,10 +46,12 @@ me.save().then((modelInstance) => {
 //Create a model for the tasks documents
 const Task = mongoose.model('Task', {
     description : {
-        type : String
+        type : String,
+        required : true
     },
     completed : {
-        type : Boolean
+        type : Boolean,
+        required : true
     }
 })
 //Create a new instance of the task model (document)
