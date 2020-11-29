@@ -34,6 +34,6 @@ connectionPromise.then((client) => {
     usersCollection.deleteMany({ age : 22 })
     .then((result) => {
         console.log(`Number of documents deleted -> deletedCount : ${result.deletedCount}.`)
-    })
+    });
 
 })
