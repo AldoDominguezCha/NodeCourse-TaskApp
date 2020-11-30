@@ -9,7 +9,7 @@ const app = express()
 const port = process.env.PORT || 3000
 
 app.post('', (req, res) => {
-    response.send('Testing!')
+    res.send('Testing!')
 })
 
 //Start the server, it will be listening for petitions at the given port
