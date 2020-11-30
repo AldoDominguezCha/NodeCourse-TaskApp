@@ -2,6 +2,8 @@
 //Node.js entities into MongoDB documents, with proper data validations and so on. 
 //It's an ORM for MongoDB.
 const mongoose = require('mongoose')
+//Import the data validator module for our models and documents
+const validator = require('validator')
 //Connection URL for mongoose to stablish connection with the MongoDB instance
 //ans the specific database:
 //Communication protocol (mongodb://) + IP address and Port (127.0.0.1:27017) + database name (task-app)
@@ -22,42 +24,71 @@ mongoose.connect(connectionURL,
 const User = mongoose.model('User', {
     name : {
         type : String,
-        required : true
+        required : true,
+        trim : true
     },
     age : {
         type : Number,
         required : true,
+        trim : true,
+        //Validating the data with a function of our own, instead we could choose to use a 
+        //robust npm package specifically designed por this purpose (npm validator) 
         validate(value){
             if(value < 0) throw new Error('The age must be a positive number')
         }
+    },
+    email : {
+        type : String,
+        required : true,
+        trim : true,
+        lowercase : true,
+        validate(value){
+            if(!validator.isEmail(value)) throw new Error('The provided email is not valid')
+        }
+    },
+    password : {
+        type : String,
+        minlength : 7,
+        trim : true,
+        validate(value){
+            if(value.toLowerCase().includes('password')) throw new Error('Invalid password')
+        }
     }
 })
+
+
 //Instantiate the model with specific values
 const me = new User({
-    name : 'AldoDev',
-    age : 0
+    name : '   AldoDev    ',
+    age : 0,
+    email : 'MAIL@MAIL.COM   ',
+    password : '  test123 '
 })
+
+
 //Save the instnace of the model (document) to the database in the MongoDB instance
-me.save().then((modelInstance) => {
+/* me.save().then((modelInstance) => {
     console.log('Saved!', modelInstance)
 }).catch((error) => {
     console.log('Error!', error)
-})
+}) */
+
 //Create a model for the tasks documents
 const Task = mongoose.model('Task', {
     description : {
         type : String,
-        required : true
+        required : true,
+        trim : true 
     },
     completed : {
         type : Boolean,
-        required : true
+        default : false
     }
 })
+
 //Create a new instance of the task model (document)
 const learnTask = new Task({
-    description : 'Learn mongoose integration with Node.js',
-    completed : false
+    description : '   Learn mongoose integration with Node.js  '
 })
 //Save the instance of the model (document)
 learnTask.save().then((modelInstance) => {
