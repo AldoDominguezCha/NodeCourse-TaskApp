@@ -8,7 +8,7 @@ const app = express()
 //or set it as 3000 as a fallback condition (local environment)
 const port = process.env.PORT || 3000
 
-app.post('', (req, res) => {
+app.post('/users', (req, res) => {
     res.send('Testing!')
 })
 
