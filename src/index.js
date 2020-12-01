@@ -1,6 +1,9 @@
 //Importing express module
-const { response } = require('express')
 const express = require('express')
+//Running the mongoose connection script to the database in the MongoDB instance
+require('./db/mongooseConnection')
+//Importing our User mongoose model
+const User = require('./models/user')
 
 //Set the express service
 const app = express()
@@ -8,8 +11,11 @@ const app = express()
 //or set it as 3000 as a fallback condition (local environment)
 const port = process.env.PORT || 3000
 
+//Automatically parse incoming JSON into an object
+app.use(express.json())
+
 app.post('/users', (req, res) => {
-    res.send('Testing!')
+    res.send(req.body)
 })
 
 //Start the server, it will be listening for petitions at the given port
