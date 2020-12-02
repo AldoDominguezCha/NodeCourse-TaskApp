@@ -11,8 +11,7 @@ const User = mongoose.model('User', {
     },
     age : {
         type : Number,
-        required : true,
-        trim : true,
+        default : 18,
         //Validating the data with a function of our own, instead we could choose to use a 
         //robust npm package specifically designed por this purpose (npm validator) 
         validate(value){
