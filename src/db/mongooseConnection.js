@@ -4,7 +4,8 @@ const connectionURL = 'mongodb://127.0.0.1:27017/mongoose-task-app'
 
 const mongooseConnectionPromise = mongoose.connect(connectionURL, {
     useUnifiedTopology : true,
-    useNewUrlParser : true
+    useNewUrlParser : true,
+    useFindAndModify : false
 })
 
 mongooseConnectionPromise.then(() => {
