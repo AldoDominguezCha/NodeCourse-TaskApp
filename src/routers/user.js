@@ -50,16 +50,20 @@ router.patch('/users/:id', async (req, res) => {
     const validUpdate = intendedUpdates.every(
         (update) => allowedUpdates.includes(update)
     )
-    
+    if(intendedUpdates.length === 0) return res.status(400).send({error : "You must provide update values"})
     if(!validUpdate) return res.status(400).send({ error : 'You are trying to update a non-valid or non-existant property' })
 
     const _id = req.params.id
     try {
-        const updatedUser = await User.findByIdAndUpdate(_id, req.body, {new : true, runValidators : true})
-        if(!updatedUser) return res.status(404).send()
-        res.status(200).send(updatedUser)
+        const user = await User.findById(_id)
+        if(!user) return res.status(404).send()
+        intendedUpdates.forEach((update) => {
+            user[update] = req.body[update]
+        })
+        await user.save()
+        res.status(200).send(user)
     } catch (e) {
-        res.status(400).send()
+        res.status(400).send(e)
     }
 })
 

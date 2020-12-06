@@ -52,13 +52,18 @@ router.patch('/tasks/:id', async (req, res) => {
     const validUpdate = intendedUpdates.every(
         (update) => allowedUpdates.includes(update)
     )
+    if(intendedUpdates.length === 0) return res.status(400).send({error : "You must provide update values"})
     if(!validUpdate) return res.status(400).send({ error : 'You are trying to update a non-valid or non-existant property' })
 
     const _id = req.params.id
     try {
-        const updatedTask = await Task.findByIdAndUpdate(_id, req.body, {new : true, runValidators : true})
-        if(!updatedTask) return res.status(404).send()
-        res.status(200).send(updatedTask)
+        const task = await Task.findById(_id)
+        if(!task) return res.status(404).send()
+        intendedUpdates.forEach((update) => {
+            task[update] = req.body[update]
+        })
+        await task.save()
+        res.status(200).send(task)
     } catch (e) {
         res.status(400).send(e)
     }

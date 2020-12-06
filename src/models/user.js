@@ -1,9 +1,10 @@
 //Import mongoose and validator npm modules
 const mongoose = require('mongoose')
 const validator = require('validator')
+const bcrypt = require('bcryptjs')
 
-//User mongoose model
-const User = mongoose.model('User', {
+//Creating the mongoose schema needed to declare the user model
+const userSchema = new mongoose.Schema({
     name : {
         type : String,
         required : true,
@@ -37,5 +38,18 @@ const User = mongoose.model('User', {
         }
     }
 })
+
+//Declaring a pre hook for the ".save()" method in user, to hash the password provided
+userSchema.pre('save', async function(next){
+    const user = this
+    /* Only hash the password if the password was modified or set for the first time,
+    always doing it would be a great mistake */
+    if(user.isModified('password')) user.password = await bcrypt.hash(user.password, 8)
+    next();
+})
+
+
+//User mongoose model
+const User = mongoose.model('User', userSchema)
 
 module.exports = User
