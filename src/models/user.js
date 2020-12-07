@@ -2,6 +2,7 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 //Creating the mongoose schema needed to declare the user model
 const userSchema = new mongoose.Schema({
@@ -22,6 +23,7 @@ const userSchema = new mongoose.Schema({
     email : {
         type : String,
         required : true,
+        unique : true,
         trim : true,
         lowercase : true,
         validate(value){
@@ -36,8 +38,22 @@ const userSchema = new mongoose.Schema({
         validate(value){
             if(value.toLowerCase().includes('password')) throw new Error('Invalid password')
         }
-    }
+    },
+    tokens : [{
+        token : {
+            type : String,
+            required : true
+        }
+    }]
 })
+
+
+userSchema.methods.generateAuthToken = async function() {
+    const token = jwt.sign({ _id : this._id.toString() }, 'secret')
+    this.tokens = this.tokens.concat({ token })
+    await this.save()
+    return token
+}
 
 //Declaring a pre hook for the ".save()" method in user, to hash the password provided
 userSchema.pre('save', async function(next){
@@ -47,6 +63,16 @@ userSchema.pre('save', async function(next){
     if(user.isModified('password')) user.password = await bcrypt.hash(user.password, 8)
     next();
 })
+
+
+//Log in function appended to the schema for the User model
+userSchema.statics.findByCredentials = async ({email, password}) => {
+    const user = await User.findOne({ email })
+    if(!user) throw new Error('The email provided is not associated to any user')
+    const isMatch = await bcrypt.compare(password, user.password)
+    if(!isMatch) throw new Error('Invalid password')
+    return user
+}
 
 
 //User mongoose model
