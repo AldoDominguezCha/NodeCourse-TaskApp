@@ -13,18 +13,6 @@ const app = express()
 const port = process.env.PORT || 3000
 
 
-/* app.use((req, res, next) => {
-    if(req.method === 'GET'){
-        res.status(500).send({error : "GET requests are disabled"})
-    } else {
-        next()
-    }
-}) */
-
-app.use((req, res, next) => {
-    res.status(503).send({ error : "The server is temporarily unavailable" })
-})
-
 
 //Automatically parse incoming JSON into an object
 app.use(express.json())

@@ -55,6 +55,14 @@ userSchema.methods.generateAuthToken = async function() {
     return token
 }
 
+userSchema.methods.toJSON = function() {
+    const user = this.toObject()
+    delete user.password
+    delete user.tokens
+    delete user.__v
+    return user
+}
+
 //Declaring a pre hook for the ".save()" method in user, to hash the password provided
 userSchema.pre('save', async function(next){
     const user = this

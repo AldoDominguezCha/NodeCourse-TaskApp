@@ -2,6 +2,7 @@
 related to the user, it gets imported at the main script of the server. */
 const express = require('express')
 const User = require('../models/user')
+const authMiddleware = require('../middleware/authentication')
 
 //Create the router
 const router = new express.Router()
@@ -20,7 +21,7 @@ router.post('/users', async (req, res) => {
     }
 })
 
-
+//Append a new authorization token to the user
 router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body)
@@ -31,32 +32,37 @@ router.post('/users/login', async (req, res) => {
     }
 })
 
-//Declare the endpoint to retrieve all users using the GET method
-router.get('/users', async (req, res) => {
+//Delete the provided authorization token from the tokens array of the user
+router.post('/users/logout', authMiddleware, async (req, res) => {
     try {
-        const users = await User.find({})
-        res.status(200).send(users)
-    } catch(e) {
-        res.status(500).send()
+        req.user.tokens = req.user.tokens.filter(
+            (token) => token.token !== req.token 
+        )
+        await req.user.save()
+        res.status(200).send()
+    } catch (e) {
+        res.status(500).send(e)
     }
 })
 
-//Declare the endpoint to retrieve one user by its ID object using the GET method
-router.get('/users/:id', async (req, res) => {
-    //Get the ID provided as a path parameter in the request
-    const _id = req.params.id
+router.post('/users/logoutAll', authMiddleware, async (req, res) => {
     try {
-        const user = await User.findById(_id)
-        if(!user) return res.status(404).send()
-        res.status(200).send(user)
+        req.user.tokens = []
+        await req.user.save()
+        res.status(200).send({ message : "All current sessions were successfully logged out" })
     } catch (e) {
-        res.status(500).send()
+        res.status(500).send(e)
     }
-    
+})
+
+//Declare the endpoint to retrieve our particular user using the GET method
+router.get('/users/me', authMiddleware , async (req, res) => {
+    //We send back the user we found as a match in the middleware authentication function 'authMiddleware'
+    res.send(req.user)
 })
 
 //Declare the endpoint to update one user by its ID object using the PATCH method
-router.patch('/users/:id', async (req, res) => {
+router.patch('/users/me', authMiddleware , async (req, res) => {
     const intendedUpdates = Object.keys(req.body)
     const allowedUpdates = ['name', 'email', 'password', 'age']
     const validUpdate = intendedUpdates.every(
@@ -65,27 +71,22 @@ router.patch('/users/:id', async (req, res) => {
     if(intendedUpdates.length === 0) return res.status(400).send({error : "You must provide update values"})
     if(!validUpdate) return res.status(400).send({ error : 'You are trying to update a non-valid or non-existant property' })
 
-    const _id = req.params.id
     try {
-        const user = await User.findById(_id)
-        if(!user) return res.status(404).send()
         intendedUpdates.forEach((update) => {
-            user[update] = req.body[update]
+            req.user[update] = req.body[update]
         })
-        await user.save()
-        res.status(200).send(user)
+        await req.user.save()
+        res.status(200).send(req.user)
     } catch (e) {
         res.status(400).send(e)
     }
 })
 
 //Declare the endpoint to delete one user by its ID object using the DELETE method
-router.delete('/users/:id', async (req, res) => {
-    const _id = req.params.id
+router.delete('/users/me', authMiddleware , async (req, res) => {
     try {
-        const deletedUser = await User.findByIdAndDelete(_id)
-        if(!deletedUser) return res.status(404).send()
-        res.status(200).send(deletedUser)
+        await req.user.remove()
+        res.status(200).send(req.user)
     } catch (e) {
         res.status(500).send()
     }

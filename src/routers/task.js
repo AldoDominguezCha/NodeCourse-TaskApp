@@ -2,6 +2,7 @@
 related to the task, it gets imported at the main script of the server. */
 const express = require('express')
 const Task = require('../models/task')
+const authMiddleware = require('../middleware/authentication')
 
 //Create the router
 const router = new express.Router()
@@ -9,8 +10,12 @@ const router = new express.Router()
 //Declare the API endpoints for the router
 
 //Declare the endpoint to create a task using the POST method
-router.post('/tasks', async (req, res) => {
-    const task = new Task(req.body)
+router.post('/tasks', authMiddleware, async (req, res) => {
+    const task = new Task({
+        ...req.body,
+        owner : req.user._id
+    });
+
     try {
         await task.save()
         res.status(201).send(task)
