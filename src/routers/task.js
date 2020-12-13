@@ -27,20 +27,34 @@ router.post('/tasks', authMiddleware, async (req, res) => {
 
 
 //Declare the endpoint to retrieve all tasks using the GET method
-router.get('/tasks', async (req, res) => {
+router.get('/tasks', authMiddleware, async (req, res) => {
     try {
-        const tasks = await Task.find({})
-        res.status(200).send(tasks)
+//Populate the virtual 'tasks' attribute in user (Do the binding between entities, one to many user > task)
+        const match = {}
+        const sort = {}
+        if(["true", "false"].includes(req.query.completed)) match.completed = req.query.completed === "true"
+        if(['createdAt', 'completed'].includes(req.query.sortBy.split(':')[0])) 
+            sort[req.query.sortBy.split(':')[0]] = req.query.sortBy.split(':')[1] === 'desc' ? -1 : 1; 
+        await req.user.populate({
+            path : 'tasks',
+            match,
+            options : {
+                limit : parseInt(req.query.limit),
+                skip : parseInt(req.query.skip),
+                sort
+            } 
+        }).execPopulate()
+        res.status(200).send(req.user.tasks)
     } catch(e) {
         res.status(500).send()
     }
 })
 
 //Declare the endpoint to retrieve one task by its ID object using the GET method
-router.get('/tasks/:id', async (req, res) => {
+router.get('/tasks/:id', authMiddleware, async (req, res) => {
     const _id = req.params.id
     try {
-        const task = await Task.findById(_id)
+        const task = await Task.findOne({ _id, owner : req.user._id })
         if(!task) return res.status(404).send()
         res.status(200).send(task)
     } catch (e) {
@@ -51,7 +65,7 @@ router.get('/tasks/:id', async (req, res) => {
 
 
 //Declare the endpoint to update one task by its ID object using the PATCH method
-router.patch('/tasks/:id', async (req, res) => {
+router.patch('/tasks/:id', authMiddleware, async (req, res) => {
     const allowedUpdates = ['description', 'completed']
     const intendedUpdates = Object.keys(req.body)
     const validUpdate = intendedUpdates.every(
@@ -62,7 +76,7 @@ router.patch('/tasks/:id', async (req, res) => {
 
     const _id = req.params.id
     try {
-        const task = await Task.findById(_id)
+        const task = await Task.findOne({ _id, owner : req.user._id })
         if(!task) return res.status(404).send()
         intendedUpdates.forEach((update) => {
             task[update] = req.body[update]
@@ -76,10 +90,10 @@ router.patch('/tasks/:id', async (req, res) => {
 
 
 //Declare the endpoint to delete one task by its ID object using the DELETE method
-router.delete('/tasks/:id', async (req, res) => {
+router.delete('/tasks/:id', authMiddleware, async (req, res) => {
     const _id = req.params.id
     try {
-        const deletedTask = await Task.findByIdAndDelete(_id)
+        const deletedTask = await Task.findOneAndDelete({ _id, owner : req.user._id })
         if(!deletedTask) return res.status(404).send()
         res.status(200).send(deletedTask)
     } catch (e) {

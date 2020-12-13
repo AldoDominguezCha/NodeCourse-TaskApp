@@ -3,6 +3,8 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Task = require('./task')
+const { response } = require('express')
 
 //Creating the mongoose schema needed to declare the user model
 const userSchema = new mongoose.Schema({
@@ -45,6 +47,17 @@ const userSchema = new mongoose.Schema({
             required : true
         }
     }]
+}, {
+    timestamps : true
+})
+
+/* Creating a virtual property on the user schema, one that 'contains' all the user's tasks,
+we need to specify which model we are referring to (Task) and the local and foreign key
+that bind the two entities together */
+userSchema.virtual('tasks', {
+    ref : 'Task',
+    localField : '_id',
+    foreignField : 'owner'
 })
 
 
@@ -64,12 +77,19 @@ userSchema.methods.toJSON = function() {
 }
 
 //Declaring a pre hook for the ".save()" method in user, to hash the password provided
-userSchema.pre('save', async function(next){
+userSchema.pre('save', async function(next) {
     const user = this
     /* Only hash the password if the password was modified or set for the first time,
     always doing it would be a great mistake */
     if(user.isModified('password')) user.password = await bcrypt.hash(user.password, 8)
     next();
+})
+
+/* Declaring a pre hook for the ".remove()" method in user, to delete all tasks
+associated to that user */
+userSchema.pre('remove', async function(next) {
+    await Task.deleteMany({ owner : this._id })
+    next()
 })
 
 
