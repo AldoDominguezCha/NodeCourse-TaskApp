@@ -26,4 +26,3 @@ app.use(taskRouter)
 app.listen(port, () => {
     console.log(`The server is up and running at port ${port}`)
 })
-
