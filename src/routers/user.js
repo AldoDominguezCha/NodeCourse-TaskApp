@@ -1,13 +1,63 @@
 /* This file is the user router, it declares all the API endpoints for the CRUD operations
 related to the user, it gets imported at the main script of the server. */
 const express = require('express')
+const sharp = require('sharp')
 const User = require('../models/user')
+const {sendWelcomeEmail, sendCancellationEmail} = require('../email/account')
 const authMiddleware = require('../middleware/authentication')
+//Requiring and setting multer options to receive file uploads into our server
+const multer = require('multer')
+const uploadAvatar = multer({
+    /* By not specifying multer the directory, it doesn't automatically save our files there
+    instead we get access to the file in our route handler at 'req.file'  */
+    //dest : 'avatars',
+    limits : {
+        fileSize : 1000000
+    },
+    fileFilter(req, file, cb) {
+        if(file.originalname.match(/\.(jpg|jpeg|png)$/)) cb(undefined, true)
+        else cb(new Error('Invalid file extension for the avatar'))
+    }
+})
 
 //Create the router
 const router = new express.Router()
 
 //Declare the API endpoints for the router
+
+/* Declare the endpoint to upload the profile picture using multer (Add form-data) to
+express requests */
+router.post('/users/me/avatar', authMiddleware , uploadAvatar.single('avatar'), async (req, res) => {
+    const buffer = await sharp(req.file.buffer).resize({ width : 250, height : 250 }).png().toBuffer()
+    req.user.avatar = buffer
+    await req.user.save()
+    res.status(200).send('Avatar picture uploaded successfully')
+}, (error, req, res, next) => {
+    res.status(400).send({error : error.message})
+})
+
+/* Declare the endpoint to delete the user's profile picture */
+router.delete('/users/me/avatar', authMiddleware, async (req, res) => {
+    req.user.avatar = undefined
+    try {
+        await req.user.save()
+        res.status(200).send('The profile avatar has been successfully deleted')
+    } catch (e) {
+        res.status(500).send(e)
+    }
+})
+
+
+router.get('/users/:id/avatar', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+        if(!user.avatar) return res.status(404).send({error : 'No user or avatar found'})
+        res.set('Content-Type', 'image/png')
+        res.status(200).send(user.avatar)
+    } catch (e) {
+        res.status(500).send(e)
+    }
+})
 
 //Declare the endpoint to create an user using the POST method
 router.post('/users', async (req, res) => {
@@ -15,6 +65,7 @@ router.post('/users', async (req, res) => {
     try {
         const token = await user.generateAuthToken()
         await user.save()
+        sendWelcomeEmail(user.email, user.name)
         res.status(201).send({user, token})
     } catch (e) {
         res.status(400).send(e)
@@ -86,6 +137,7 @@ router.patch('/users/me', authMiddleware , async (req, res) => {
 router.delete('/users/me', authMiddleware , async (req, res) => {
     try {
         await req.user.remove()
+        sendCancellationEmail(req.user.email, req.user.name)
         res.status(200).send(req.user)
     } catch (e) {
         res.status(500).send()

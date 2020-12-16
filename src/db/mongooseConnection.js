@@ -1,8 +1,6 @@
 const mongoose = require('mongoose')
 
-const connectionURL = 'mongodb://127.0.0.1:27017/mongoose-task-app'
-
-const mongooseConnectionPromise = mongoose.connect(connectionURL, {
+const mongooseConnectionPromise = mongoose.connect(process.env.MONGODB_URL, {
     useUnifiedTopology : true,
     useNewUrlParser : true,
     useFindAndModify : false
