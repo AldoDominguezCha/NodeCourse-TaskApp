@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev" : "env-cmd -f ./config/dev.env node src/index.js"
+    "dev": "env-cmd -f ./config/dev.env node src/index.js",
+    "test": "env-cmd -f ./config/test.env jest --watch"
+  },
+  "jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +26,9 @@
   },
   "devDependencies": {
     "env-cmd": "^10.1.0",
+    "jest": "^26.6.3",
     "mocha": "^8.2.1",
-    "nodemon": "^1.18.9"
+    "nodemon": "^1.18.9",
+    "supertest": "^6.0.1"
   }
 }
