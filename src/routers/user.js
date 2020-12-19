@@ -133,7 +133,8 @@ router.patch('/users/me', authMiddleware , async (req, res) => {
     }
 })
 
-//Declare the endpoint to delete one user by its ID object using the DELETE method
+/* Declare the endpoint to delete the user whose ID is encoded inside the
+authentication token provided */
 router.delete('/users/me', authMiddleware , async (req, res) => {
     try {
         await req.user.remove()

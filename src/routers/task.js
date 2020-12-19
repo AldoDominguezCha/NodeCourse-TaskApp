@@ -33,8 +33,10 @@ router.get('/tasks', authMiddleware, async (req, res) => {
         const match = {}
         const sort = {}
         if(["true", "false"].includes(req.query.completed)) match.completed = req.query.completed === "true"
-        if(['createdAt', 'completed'].includes(req.query.sortBy.split(':')[0])) 
-            sort[req.query.sortBy.split(':')[0]] = req.query.sortBy.split(':')[1] === 'desc' ? -1 : 1; 
+        if(req.query.sortBy){
+            if(['createdAt', 'completed'].includes(req.query.sortBy.split(':')[0])) 
+                sort[req.query.sortBy.split(':')[0]] = req.query.sortBy.split(':')[1] === 'desc' ? -1 : 1;
+        } 
         await req.user.populate({
             path : 'tasks',
             match,
